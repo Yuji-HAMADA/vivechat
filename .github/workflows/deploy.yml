@@ -1,0 +1,37 @@
+# .github/workflows/deploy.yml
+
+name: Deploy Flutter Web to GitHub Pages
+
+on:
+  # Trigger the workflow every time you push to the `main` branch
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to push to the gh-pages branch
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x' # Use a recent stable version of Flutter
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web application
+        # This command builds the app and sets the correct base URL for your GitHub Pages site
+        run: flutter build web --base-href /vivechat/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # The directory where the built web app is located
+          publish_dir: ./build/web
