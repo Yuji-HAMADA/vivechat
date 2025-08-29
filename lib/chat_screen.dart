@@ -10,7 +10,7 @@ import 'secrets.dart';
 import 'conversation_service.dart';
 import 'chat_message.dart';
 import 'character_service.dart';
-import 'gallery_screen.dart'; // Import the new gallery screen
+import 'gallery_screen.dart';
 
 const String apiKey = geminiApiKey;
 
@@ -38,7 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   bool _isLoading = false;
   String? _error;
-  String? _currentEmotionStatus;
+  String? _currentEmotion;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -90,7 +90,7 @@ class _ChatScreenState extends State<ChatScreen> {
           _originalImageFile = pickedFile;
           _conversationService.clearMessages();
           _emotionImageCache.clear();
-          _currentEmotionStatus = null;
+          _currentEmotion = null;
           _error = null;
         });
         _currentImageData = await compute(_readBytesInBackground, pickedFile.path);
@@ -106,7 +106,10 @@ class _ChatScreenState extends State<ChatScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => GalleryScreen(imageCache: _emotionImageCache),
+        builder: (context) => GalleryScreen(
+          imageCache: _emotionImageCache,
+          originalImage: _originalImageFile,
+        ),
       ),
     );
   }
@@ -141,7 +144,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       if (aiResponse != null) {
         setState(() {
-          _currentEmotionStatus = 'Emotion: ${aiResponse.emotion.toUpperCase()}';
+          _currentEmotion = aiResponse.emotion.toUpperCase();
           _conversationService.addMessage(ChatMessage(text: aiResponse.chatText, isUser: false));
         });
 
@@ -209,15 +212,15 @@ class _ChatScreenState extends State<ChatScreen> {
                     alignment: Alignment.bottomCenter,
                     children: [
                       Center(child: Image.memory(_currentImageData!)),
-                      if (_currentEmotionStatus != null)
+                      if (_currentEmotion != null)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.7),
+                            color: Colors.black87, // Corrected value
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            _currentEmotionStatus!,
+                            _currentEmotion!,
                             style: const TextStyle(color: Colors.white),
                           ),
                         ),

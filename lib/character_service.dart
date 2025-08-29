@@ -3,10 +3,10 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'secrets.dart';
+import 'api_constants.dart'; // Import the new constants file
 
 const String apiKey = geminiApiKey;
 
-// A class to hold the combined response from the AI
 class AIResponse {
   final String chatText;
   final String emotion;
@@ -14,11 +14,9 @@ class AIResponse {
 }
 
 class CharacterService {
-  // Phase 1: Get the character's emotion and text response
   static Future<AIResponse?> getEmotionalResponse(
       String history, Uint8List imageBytes) async {
-    final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=$apiKey');
+    final url = Uri.parse('${ApiConstants.getEndpoint('generateContent')}?key=$apiKey');
     final headers = {'Content-Type': 'application/json'};
 
     final prompt = """
@@ -59,7 +57,6 @@ $history
         if (candidates != null && candidates.isNotEmpty) {
           final content = candidates[0]['content']['parts'][0]['text'] as String?;
           if (content != null) {
-            // Parse the new, simpler format
             String chatText = "I'm not sure what to say.";
             String emotion = "Neutral";
             final lines = content.split('\n');
@@ -80,11 +77,9 @@ $history
     return null;
   }
 
-  // Phase 2: Generate a new image based on the determined emotion
   static Future<Uint8List?> generateEmotionalImage(
       String emotion, Uint8List imageBytes) async {
-    final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=$apiKey');
+    final url = Uri.parse('${ApiConstants.getEndpoint('generateContent')}?key=$apiKey');
     final headers = {'Content-Type': 'application/json'};
     
     final prompt = "A photo of the person in the image with a ${emotion.toLowerCase()} expression on their face.";
