@@ -14,14 +14,6 @@ import 'gallery_screen.dart';
 
 const String apiKey = geminiApiKey;
 
-Future<Uint8List> _readBytesInBackground(String path) async {
-  return await File(path).readAsBytes();
-}
-
-Future<void> _writeBytesInBackground(Map<String, dynamic> data) async {
-  await File(data['path']).writeAsBytes(data['bytes']);
-}
-
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
   @override
@@ -33,8 +25,10 @@ class _ChatScreenState extends State<ChatScreen> {
   final ConversationService _conversationService = ConversationService();
   
   XFile? _originalImageFile;
+  Uint8List? _originalImageBytes;
   Uint8List? _currentImageData;
-  final Map<String, XFile> _emotionImageCache = {};
+  
+  final Map<String, Uint8List> _emotionImageCache = {};
 
   bool _isLoading = false;
   String? _error;
@@ -49,32 +43,42 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _saveData() async {
+    if (kIsWeb) return; 
+
     final prefs = await SharedPreferences.getInstance();
     if (_originalImageFile != null) {
       await prefs.setString('original_image_path', _originalImageFile!.path);
     } else {
       await prefs.remove('original_image_path');
     }
-    final Map<String, String> cachePaths = _emotionImageCache.map((key, value) => MapEntry(key, value.path));
-    await prefs.setString('emotion_cache', jsonEncode(cachePaths));
-    
+    final Map<String, String> cachePaths = {};
+    for (var entry in _emotionImageCache.entries) {
+        final tempDir = await getTemporaryDirectory();
+        final filePath = '${tempDir.path}/${entry.key}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        await File(filePath).writeAsBytes(entry.value);
+        cachePaths[entry.key] = filePath;
+    }
+    await prefs.setString('emotion_cache_paths', jsonEncode(cachePaths));
     await _conversationService.saveData();
   }
 
   Future<void> _loadData() async {
     await _conversationService.loadData();
+    if (kIsWeb) return;
+
     final prefs = await SharedPreferences.getInstance();
     final imagePath = prefs.getString('original_image_path');
     if (imagePath != null && await File(imagePath).exists()) {
       _originalImageFile = XFile(imagePath);
-      _currentImageData = await compute(_readBytesInBackground, imagePath);
+      _originalImageBytes = await _originalImageFile!.readAsBytes();
+      _currentImageData = _originalImageBytes;
       
-      final cacheJson = prefs.getString('emotion_cache');
+      final cacheJson = prefs.getString('emotion_cache_paths');
       if (cacheJson != null) {
         final Map<String, dynamic> cachePaths = jsonDecode(cacheJson);
         for (var entry in cachePaths.entries) {
           if (await File(entry.value).exists()) {
-            _emotionImageCache[entry.key] = XFile(entry.value);
+            _emotionImageCache[entry.key] = await File(entry.value).readAsBytes();
           }
         }
       }
@@ -86,16 +90,17 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
+        final imageBytes = await pickedFile.readAsBytes();
         setState(() {
           _originalImageFile = pickedFile;
+          _originalImageBytes = imageBytes;
+          _currentImageData = imageBytes;
           _conversationService.clearMessages();
           _emotionImageCache.clear();
           _currentEmotion = null;
           _error = null;
         });
-        _currentImageData = await compute(_readBytesInBackground, pickedFile.path);
         await _saveData();
-        setState((){});
       }
     } catch (e) {
       setState(() { _error = "Failed to pick image: $e"; });
@@ -108,9 +113,46 @@ class _ChatScreenState extends State<ChatScreen> {
       MaterialPageRoute(
         builder: (context) => GalleryScreen(
           imageCache: _emotionImageCache,
-          originalImage: _originalImageFile,
+          originalImageBytes: _originalImageBytes,
         ),
       ),
+    );
+  }
+
+  Future<void> _showClearHistoryConfirmationDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Clear Chat History?'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('This will permanently delete the conversation.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Clear'),
+              onPressed: () {
+                setState(() {
+                  _conversationService.clearMessages();
+                });
+                _conversationService.saveData();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -119,7 +161,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() { _error = 'Please add your Gemini API key.'; });
       return;
     }
-    if (_originalImageFile == null) {
+    if (_originalImageBytes == null) {
       setState(() { _error = 'Please select a character image first.'; });
       return;
     }
@@ -137,7 +179,7 @@ class _ChatScreenState extends State<ChatScreen> {
     await _conversationService.saveData();
 
     try {
-      final baseImageBytes = await compute(_readBytesInBackground, _originalImageFile!.path);
+      final baseImageBytes = _originalImageBytes!;
       
       final aiResponse = await CharacterService.getEmotionalResponse(
           _conversationService.getHistoryForPrompt(), baseImageBytes);
@@ -152,17 +194,14 @@ class _ChatScreenState extends State<ChatScreen> {
         final emotionKey = aiResponse.emotion.toLowerCase();
 
         if (_emotionImageCache.containsKey(emotionKey)) {
-          newImageData = await compute(_readBytesInBackground, _emotionImageCache[emotionKey]!.path);
+          newImageData = _emotionImageCache[emotionKey];
         } else {
           final generatedBytes = await CharacterService.generateEmotionalImage(
               aiResponse.emotion, baseImageBytes);
           
           if (generatedBytes != null) {
             newImageData = generatedBytes;
-            final tempDir = await getTemporaryDirectory();
-            final filePath = '${tempDir.path}/${emotionKey}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-            await compute(_writeBytesInBackground, {'path': filePath, 'bytes': generatedBytes});
-            _emotionImageCache[emotionKey] = XFile(filePath);
+            _emotionImageCache[emotionKey] = generatedBytes;
             await _saveData();
           }
         }
@@ -188,16 +227,21 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chat With Your Character'),
+        title: const Text('ViveChat'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_sweep),
+            onPressed: _showClearHistoryConfirmationDialog,
+            tooltip: 'Clear Chat History',
+          ),
           IconButton(
             icon: const Icon(Icons.collections),
             onPressed: _openGallery,
             tooltip: 'Emotion Gallery',
           ),
           IconButton(
-            icon: const Icon(Icons.photo_library),
-            onPressed: () => _pickImage(),
+            icon: const Icon(Icons.add_photo_alternate),
+            onPressed: _pickImage,
             tooltip: 'Select Character Image',
           )
         ],
@@ -216,7 +260,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.black87, // Corrected value
+                            color: Colors.black87,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -228,7 +272,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   )
                 : Center(
                     child: ElevatedButton(
-                      onPressed: () => _pickImage(),
+                      onPressed: _pickImage,
                       child: const Text('Select a Character'),
                     ),
                   ),
@@ -280,7 +324,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.send),
-                  onPressed: _isLoading ? null : () => _sendCommand(),
+                  onPressed: _isLoading ? null : _sendCommand,
                 ),
               ],
             ),

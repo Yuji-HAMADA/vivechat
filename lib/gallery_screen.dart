@@ -1,32 +1,29 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'gallery_viewer_screen.dart'; 
 
 class GalleryScreen extends StatelessWidget {
-  final Map<String, XFile> imageCache;
-  final XFile? originalImage;
+  final Map<String, Uint8List> imageCache;
+  final Uint8List? originalImageBytes;
 
-  const GalleryScreen({super.key, required this.imageCache, this.originalImage});
+  const GalleryScreen({super.key, required this.imageCache, this.originalImageBytes});
 
   @override
   Widget build(BuildContext context) {
-    final List<MapEntry<String, XFile>> imageList = [];
-
-    // Add the original image first if it exists
-    if (originalImage != null) {
-      imageList.add(MapEntry('ORIGINAL', originalImage!));
+    final List<MapEntry<String, Uint8List>> imageList = [];
+    if (originalImageBytes != null) {
+      imageList.add(MapEntry('ORIGINAL', originalImageBytes!));
     }
-    // Add the cached emotional images
     imageList.addAll(imageCache.entries);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Character Image Gallery'),
+        title: const Text('Character Emotion Gallery'),
       ),
       body: imageList.isEmpty
           ? const Center(
               child: Text(
-                'No images have been generated or selected yet.',
+                'No emotional images have been generated yet.',
                 style: TextStyle(fontSize: 16),
               ),
             )
@@ -41,19 +38,35 @@ class GalleryScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final entry = imageList[index];
                 final caption = entry.key;
-                final imageFile = entry.value;
+                final imageBytes = entry.value;
 
-                return GridTile(
-                  footer: GridTileBar(
-                    backgroundColor: Colors.black54,
-                    title: Text(
-                      caption.toUpperCase(),
-                      textAlign: TextAlign.center,
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GalleryViewerScreen(
+                          imageList: imageList,
+                          initialIndex: index,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Hero(
+                    tag: 'galleryHero_${imageBytes.hashCode}',
+                    child: GridTile(
+                      footer: GridTileBar(
+                        backgroundColor: Colors.black54,
+                        title: Text(
+                          caption.toUpperCase(),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      child: Image.memory(
+                        imageBytes,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                  ),
-                  child: Image.file(
-                    File(imageFile.path),
-                    fit: BoxFit.cover,
                   ),
                 );
               },
