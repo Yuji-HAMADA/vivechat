@@ -46,3 +46,4 @@ app.*.map.json
 
 service-account-key.json
 lib/secrets.dart
+node_modules/
