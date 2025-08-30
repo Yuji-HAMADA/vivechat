@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class ChatMessage {
   String text;
   final bool isUser;
