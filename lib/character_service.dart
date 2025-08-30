@@ -17,7 +17,10 @@ class CharacterService {
   static Future<AIResponse?> getEmotionalResponse(
       String history, Uint8List imageBytes) async {
     final url = Uri.parse('${ApiConstants.getEndpoint('generateContent')}?key=$apiKey');
-    final headers = {'Content-Type': 'application/json'};
+    final headers = {
+      'Content-Type': 'application/json',
+      'User-Agent': 'ViveChat/1.0'
+      };
 
     final prompt = """
 You are the character in the image. Your personality is friendly and curious.
@@ -80,7 +83,10 @@ $history
   static Future<Uint8List?> generateEmotionalImage(
       String emotion, Uint8List imageBytes) async {
     final url = Uri.parse('${ApiConstants.getEndpoint('generateContent')}?key=$apiKey');
-    final headers = {'Content-Type': 'application/json'};
+    final headers = {
+      'Content-Type': 'application/json',
+      'User-Agent': 'ViveChat/1.0'
+      };
     
     final prompt = "A photo of the person in the image with a ${emotion.toLowerCase()} expression on their face.";
 
