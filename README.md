@@ -1,5 +1,6 @@
 # Vivechat: The Living Character Chat
 
+<!-- This is a Flutter application that brings a static image to life. -->
 Vivechat is a Flutter application that brings a static image to life using the power of the Google Gemini API. Select an image of any character, and have a dynamic, context-aware conversation. The character's image changes in real-time to reflect its emotional state based on your chat, creating a truly interactive experience.
 
 ## Features
