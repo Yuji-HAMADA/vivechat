@@ -73,6 +73,11 @@ $history
             return AIResponse(chatText: chatText, emotion: emotion);
           }
         }
+        // Log the raw body if parsing fails or content is missing
+        print("Character did not respond. Raw response body: ${response.body}");
+      } else {
+        // Log the raw body if the HTTP request itself fails
+        print("Character did not respond. HTTP Error ${response.statusCode}. Raw response body: ${response.body}");
       }
     } catch (e) {
       print("Error getting emotional response: $e");
