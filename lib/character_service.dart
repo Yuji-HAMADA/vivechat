@@ -2,10 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'secrets.dart';
 import 'api_constants.dart'; // Import the new constants file
-
-const String apiKey = geminiApiKey;
 
 class AIResponse {
   final String chatText;
@@ -16,7 +13,7 @@ class AIResponse {
 class CharacterService {
   static Future<AIResponse?> getEmotionalResponse(
       String history, Uint8List imageBytes) async {
-    final url = Uri.parse('${ApiConstants.getEndpoint('generateContent')}?key=$apiKey');
+    final url = Uri.parse(ApiConstants.baseUrl);
     final headers = {
       'Content-Type': 'application/json',
       'User-Agent': 'ViveChat/1.0'
@@ -87,7 +84,7 @@ $history
 
   static Future<Uint8List?> generateEmotionalImage(
       String emotion, Uint8List imageBytes) async {
-    final url = Uri.parse('${ApiConstants.getEndpoint('generateContent')}?key=$apiKey');
+    final url = Uri.parse(ApiConstants.baseUrl);
     final headers = {
       'Content-Type': 'application/json',
       'User-Agent': 'ViveChat/1.0'
