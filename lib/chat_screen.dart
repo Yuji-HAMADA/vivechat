@@ -11,6 +11,7 @@ import 'conversation_service.dart';
 import 'chat_message.dart';
 import 'character_service.dart';
 import 'gallery_screen.dart';
+import 'image_update_service.dart';
 
 const String apiKey = geminiApiKey;
 
@@ -33,6 +34,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isLoading = false;
   String? _error;
   String? _currentEmotion;
+  bool _isImageUpdateMode = false;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -169,57 +171,96 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
 
-    final userMessage = ChatMessage(text: _textController.text, isUser: true);
-    setState(() {
-      _conversationService.addMessage(userMessage);
-      _isLoading = true;
-      _error = null;
-    });
+    final promptText = _textController.text;
     _textController.clear();
-    await _conversationService.saveData();
 
-    try {
-      final baseImageBytes = _originalImageBytes!;
-      
-      final aiResponse = await CharacterService.getEmotionalResponse(
-          _conversationService.getHistoryForPrompt(), baseImageBytes);
+    if (_isImageUpdateMode) {
+      final userMessage = ChatMessage(text: promptText, isUser: true);
+      _conversationService.addMessage(userMessage);
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
 
-      if (aiResponse != null) {
-        Uint8List? newImageData;
-        final emotionKey = aiResponse.emotion.toLowerCase();
+      try {
+        final baseImageBytes = _originalImageBytes!;
+        final imageUpdateResponse = await ImageUpdateService.updateImageFromPrompt(
+            promptText, baseImageBytes);
 
-        if (_emotionImageCache.containsKey(emotionKey)) {
-          newImageData = _emotionImageCache[emotionKey];
+        if (imageUpdateResponse != null) {
+          final newEmotionKey = "Updated ${DateTime.now().millisecondsSinceEpoch}";
+          if (imageUpdateResponse.imageBytes != null) {
+            _emotionImageCache[newEmotionKey] = imageUpdateResponse.imageBytes!;
+          }
+          setState(() {
+            if (imageUpdateResponse.imageBytes != null) {
+              _currentImageData = imageUpdateResponse.imageBytes;
+              _originalImageBytes = imageUpdateResponse.imageBytes;
+            }
+            _conversationService.addMessage(ChatMessage(text: imageUpdateResponse.chatText, isUser: false));
+            _isImageUpdateMode = false;
+          });
+          await _saveData();
         } else {
-          final generatedBytes = await CharacterService.generateEmotionalImage(
-              aiResponse.emotion, baseImageBytes);
-          
-          if (generatedBytes != null) {
-            newImageData = generatedBytes;
-            _emotionImageCache[emotionKey] = generatedBytes;
-            await _saveData();
-          }
+          setState(() {
+            _error = "Failed to update image.";
+          });
         }
-        
-        setState(() {
-          _currentEmotion = aiResponse.emotion.toUpperCase();
-          _conversationService.addMessage(ChatMessage(text: aiResponse.chatText, isUser: false));
-          if (newImageData != null) {
-            _currentImageData = newImageData;
-          } else {
-            _currentImageData = _originalImageBytes;
-          }
-        });
-
-      } else {
-        setState(() { _error = "The character didn't respond."; });
+      } catch (e) {
+        setState(() { _error = 'An error occurred: $e'; });
+      } finally {
+        setState(() { _isLoading = false; });
       }
-
-    } catch (e) {
-      setState(() { _error = 'An error occurred: $e'; });
-    } finally {
-      setState(() { _isLoading = false; });
+    } else {
+      final userMessage = ChatMessage(text: promptText, isUser: true);
+      _conversationService.addMessage(userMessage);
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
       await _conversationService.saveData();
+
+      try {
+        final baseImageBytes = _originalImageBytes!;
+        
+        final aiResponse = await CharacterService.getEmotionalResponse(
+            _conversationService.getHistoryForPrompt(), baseImageBytes);
+
+        if (aiResponse != null) {
+          Uint8List? newImageData;
+          final emotionKey = aiResponse.emotion.toLowerCase();
+
+          if (_currentEmotion?.toLowerCase() != emotionKey) {
+            if (_emotionImageCache.containsKey(emotionKey)) {
+              newImageData = _emotionImageCache[emotionKey];
+            } else {
+              final generatedBytes = await CharacterService.generateEmotionalImage(
+                  aiResponse.emotion, baseImageBytes);
+              
+              if (generatedBytes != null) {
+                newImageData = generatedBytes;
+                _emotionImageCache[emotionKey] = generatedBytes;
+                await _saveData();
+              }
+            }
+          }
+
+          setState(() {
+            _currentEmotion = aiResponse.emotion.toUpperCase();
+            _conversationService.addMessage(ChatMessage(text: aiResponse.chatText, isUser: false));
+            if (newImageData != null) {
+              _currentImageData = newImageData;
+            }
+          });
+        } else {
+          setState(() { _error = "The character didn't respond."; });
+        }
+      } catch (e) {
+        setState(() { _error = 'An error occurred: $e'; });
+      } finally {
+        setState(() { _isLoading = false; });
+        await _conversationService.saveData();
+      }
     }
   }
 
@@ -309,6 +350,19 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Text(_error!, style: const TextStyle(color: Colors.red)),
             ),
           Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: CheckboxListTile(
+              title: const Text("Just Update Image"),
+              value: _isImageUpdateMode,
+              onChanged: (newValue) {
+                setState(() {
+                  _isImageUpdateMode = newValue!;
+                });
+              },
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
+          ),
+          Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
@@ -334,3 +388,4 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
+

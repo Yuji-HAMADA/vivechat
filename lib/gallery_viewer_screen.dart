@@ -36,7 +36,7 @@ class _GalleryViewerScreenState extends State<GalleryViewerScreen> {
     if (kIsWeb) {
       final blob = html.Blob([imageBytes]);
       final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
+      html.AnchorElement(href: url)
         ..setAttribute("download", "image.png")
         ..click();
       html.Url.revokeObjectUrl(url);
@@ -88,14 +88,17 @@ class _GalleryViewerScreenState extends State<GalleryViewerScreen> {
         },
         itemBuilder: (context, index) {
           final imageBytes = widget.imageList[index].value;
-          return InteractiveViewer(
-            panEnabled: true,
-            minScale: 1.0,
-            maxScale: 4.0,
-            child: Center(
-              child: Image.memory(
-                imageBytes,
-                fit: BoxFit.contain,
+          return Hero(
+            tag: 'galleryHero_${imageBytes.hashCode}_$index',
+            child: InteractiveViewer(
+              panEnabled: true,
+              minScale: 1.0,
+              maxScale: 4.0,
+              child: Center(
+                child: Image.memory(
+                  imageBytes,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           );

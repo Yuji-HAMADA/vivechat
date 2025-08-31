@@ -23,7 +23,7 @@ class FullScreenImageViewer extends StatelessWidget {
       if (kIsWeb) {
         final blob = html.Blob([bytes]);
         final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
+        html.AnchorElement(href: url)
           ..setAttribute("download", "image.png")
           ..click();
         html.Url.revokeObjectUrl(url);

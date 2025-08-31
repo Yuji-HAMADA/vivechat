@@ -10,6 +10,12 @@ class AIResponse {
   AIResponse({required this.chatText, required this.emotion});
 }
 
+class ImageUpdateResponse {
+  final String chatText;
+  final Uint8List? imageBytes;
+  ImageUpdateResponse({required this.chatText, this.imageBytes});
+}
+
 class CharacterService {
   static Future<AIResponse?> getEmotionalResponse(
       String history, Uint8List imageBytes) async {

@@ -53,7 +53,7 @@ class GalleryScreen extends StatelessWidget {
                     );
                   },
                   child: Hero(
-                    tag: 'galleryHero_${imageBytes.hashCode}',
+                    tag: 'galleryHero_${imageBytes.hashCode}_$index',
                     child: GridTile(
                       footer: GridTileBar(
                         backgroundColor: Colors.black54,
