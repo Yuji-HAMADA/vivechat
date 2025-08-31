@@ -185,11 +185,6 @@ class _ChatScreenState extends State<ChatScreen> {
           _conversationService.getHistoryForPrompt(), baseImageBytes);
 
       if (aiResponse != null) {
-        setState(() {
-          _currentEmotion = aiResponse.emotion.toUpperCase();
-          _conversationService.addMessage(ChatMessage(text: aiResponse.chatText, isUser: false));
-        });
-
         Uint8List? newImageData;
         final emotionKey = aiResponse.emotion.toLowerCase();
 
@@ -206,11 +201,16 @@ class _ChatScreenState extends State<ChatScreen> {
           }
         }
         
-        if (newImageData != null) {
-          setState(() {
+        setState(() {
+          _currentEmotion = aiResponse.emotion.toUpperCase();
+          _conversationService.addMessage(ChatMessage(text: aiResponse.chatText, isUser: false));
+          if (newImageData != null) {
             _currentImageData = newImageData;
-          });
-        }
+          } else {
+            _currentImageData = _originalImageBytes;
+          }
+        });
+
       } else {
         setState(() { _error = "The character didn't respond."; });
       }
