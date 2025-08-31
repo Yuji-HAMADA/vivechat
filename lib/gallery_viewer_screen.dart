@@ -1,5 +1,8 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:saver_gallery/saver_gallery.dart';
+import 'package:universal_html/html.dart' as html;
 
 class GalleryViewerScreen extends StatefulWidget {
   final List<MapEntry<String, Uint8List>> imageList;
@@ -26,6 +29,36 @@ class _GalleryViewerScreenState extends State<GalleryViewerScreen> {
     _currentCaption = widget.imageList[widget.initialIndex].key.toUpperCase();
   }
 
+  Future<void> _downloadImage() async {
+    final int currentIndex = _pageController.page!.round();
+    final Uint8List imageBytes = widget.imageList[currentIndex].value;
+
+    if (kIsWeb) {
+      final blob = html.Blob([imageBytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute("download", "image.png")
+        ..click();
+      html.Url.revokeObjectUrl(url);
+    } else {
+      final result = await SaverGallery.saveImage(
+        imageBytes,
+        fileName: 'image.png',
+        androidRelativePath: 'Pictures/ViveChat',
+        skipIfExists: false,
+      );
+      if (result.isSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image saved to gallery')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to save image')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,6 +71,12 @@ class _GalleryViewerScreenState extends State<GalleryViewerScreen> {
           _currentCaption,
           style: const TextStyle(color: Colors.white),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.download),
+            onPressed: _downloadImage,
+          ),
+        ],
       ),
       body: PageView.builder(
         controller: _pageController,
