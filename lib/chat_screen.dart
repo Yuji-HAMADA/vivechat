@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -341,7 +340,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           if (_isLoading) const Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(8.0),
             child: CircularProgressIndicator(),
           ),
           if (_error != null)

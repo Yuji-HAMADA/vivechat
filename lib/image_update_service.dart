@@ -22,7 +22,7 @@ class ImageUpdateService {
       'contents': [
         {
           'parts': [
-            {'text': "Based on the following prompt, generate a new image and a short confirmation message. Prompt: " + prompt},
+            {'text': "Based on the following prompt, generate a new image and a short confirmation message. Prompt: $prompt"},
             {
               'inline_data': {
                 'mime_type': 'image/jpeg',
