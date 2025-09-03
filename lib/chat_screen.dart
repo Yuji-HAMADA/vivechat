@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vivechat/home_screen.dart';
 import 'secrets.dart';
 import 'conversation_service.dart';
 import 'chat_message.dart';
@@ -15,7 +17,8 @@ import 'image_update_service.dart';
 const String apiKey = geminiApiKey;
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  final String character;
+  const ChatScreen({super.key, required this.character});
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
@@ -35,76 +38,48 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _currentEmotion;
   bool _isImageUpdateMode = false;
 
-  final ImagePicker _picker = ImagePicker();
-
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadCharacter();
   }
 
-  Future<void> _saveData() async {
-    if (kIsWeb) return; 
+  @override
+  void didUpdateWidget(ChatScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.character != oldWidget.character) {
+      _loadCharacter();
+    }
+  }
 
-    final prefs = await SharedPreferences.getInstance();
-    if (_originalImageFile != null) {
-      await prefs.setString('original_image_path', _originalImageFile!.path);
+  Future<void> _loadCharacter() async {
+    if (widget.character.startsWith('assets/')) {
+      final byteData = await rootBundle.load(widget.character);
+      setState(() {
+        _originalImageBytes = byteData.buffer.asUint8List();
+        _currentImageData = _originalImageBytes;
+      });
     } else {
-      await prefs.remove('original_image_path');
-    }
-    final Map<String, String> cachePaths = {};
-    for (var entry in _emotionImageCache.entries) {
-        final tempDir = await getTemporaryDirectory();
-        final filePath = '${tempDir.path}/${entry.key}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        await File(filePath).writeAsBytes(entry.value);
-        cachePaths[entry.key] = filePath;
-    }
-    await prefs.setString('emotion_cache_paths', jsonEncode(cachePaths));
-    await _conversationService.saveData();
-  }
-
-  Future<void> _loadData() async {
-    await _conversationService.loadData();
-    if (kIsWeb) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final imagePath = prefs.getString('original_image_path');
-    if (imagePath != null && await File(imagePath).exists()) {
-      _originalImageFile = XFile(imagePath);
-      _originalImageBytes = await _originalImageFile!.readAsBytes();
-      _currentImageData = _originalImageBytes;
-      
-      final cacheJson = prefs.getString('emotion_cache_paths');
-      if (cacheJson != null) {
-        final Map<String, dynamic> cachePaths = jsonDecode(cacheJson);
-        for (var entry in cachePaths.entries) {
-          if (await File(entry.value).exists()) {
-            _emotionImageCache[entry.key] = await File(entry.value).readAsBytes();
-          }
-        }
-      }
-    }
-    setState(() {});
-  }
-
-  Future<void> _pickImage() async {
-    try {
-      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-      if (pickedFile != null) {
-        final imageBytes = await pickedFile.readAsBytes();
+      if (kIsWeb) {
+        // On web, the path is a URL. We can read the bytes directly from the XFile.
+        final xfile = XFile(widget.character);
+        final imageBytes = await xfile.readAsBytes();
         setState(() {
-          _originalImageFile = pickedFile;
+          _originalImageFile = xfile;
           _originalImageBytes = imageBytes;
           _currentImageData = imageBytes;
-          _conversationService.clearMessages();
-          _emotionImageCache.clear();
-          _currentEmotion = null;
-          _error = null;
         });
-        await _saveData();
+      } else {
+        final imageFile = File(widget.character);
+        if (await imageFile.exists()) {
+          final imageBytes = await imageFile.readAsBytes();
+          setState(() {
+            _originalImageFile = XFile(widget.character);
+            _originalImageBytes = imageBytes;
+            _currentImageData = imageBytes;
+          });
+        }
       }
-    } catch (e) {
-      setState(() { _error = "Failed to pick image: $e"; });
     }
   }
 
@@ -147,7 +122,6 @@ class _ChatScreenState extends State<ChatScreen> {
                 setState(() {
                   _conversationService.clearMessages();
                 });
-                _conversationService.saveData();
                 Navigator.of(context).pop();
               },
             ),
@@ -199,7 +173,6 @@ class _ChatScreenState extends State<ChatScreen> {
             _conversationService.addMessage(ChatMessage(text: imageUpdateResponse.chatText, isUser: false));
             _isImageUpdateMode = false;
           });
-          await _saveData();
         } else {
           setState(() {
             _error = "Failed to update image.";
@@ -217,7 +190,6 @@ class _ChatScreenState extends State<ChatScreen> {
         _isLoading = true;
         _error = null;
       });
-      await _conversationService.saveData();
 
       try {
         final baseImageBytes = _originalImageBytes!;
@@ -239,7 +211,6 @@ class _ChatScreenState extends State<ChatScreen> {
               if (generatedBytes != null) {
                 newImageData = generatedBytes;
                 _emotionImageCache[emotionKey] = generatedBytes;
-                await _saveData();
               }
             }
           }
@@ -258,7 +229,6 @@ class _ChatScreenState extends State<ChatScreen> {
         setState(() { _error = 'An error occurred: $e'; });
       } finally {
         setState(() { _isLoading = false; });
-        await _conversationService.saveData();
       }
     }
   }
@@ -270,6 +240,17 @@ class _ChatScreenState extends State<ChatScreen> {
         title: const Text('ViveChat'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.add_a_photo),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                (Route<dynamic> route) => false,
+              );
+            },
+            tooltip: 'Select Character',
+          ),
+          IconButton(
             icon: const Icon(Icons.delete_sweep),
             onPressed: _showClearHistoryConfirmationDialog,
             tooltip: 'Clear Chat History',
@@ -279,11 +260,6 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: _openGallery,
             tooltip: 'Emotion Gallery',
           ),
-          IconButton(
-            icon: const Icon(Icons.add_photo_alternate),
-            onPressed: _pickImage,
-            tooltip: 'Select Character Image',
-          )
         ],
       ),
       body: Column(
@@ -310,11 +286,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                     ],
                   )
-                : Center(
-                    child: ElevatedButton(
-                      onPressed: _pickImage,
-                      child: const Text('Select a Character'),
-                    ),
+                : const Center(
+                    child: CircularProgressIndicator(),
                   ),
           ),
           Expanded(
