@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:vivechat/full_screen_image_viewer.dart';
 import 'package:vivechat/home_screen.dart';
 import 'secrets.dart';
 import 'conversation_service.dart';
@@ -23,11 +24,11 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
   final ConversationService _conversationService = ConversationService();
-  
+
   XFile? _originalImageFile;
   Uint8List? _originalImageBytes;
   Uint8List? _currentImageData;
-  
+
   final Map<String, Uint8List> _emotionImageCache = {};
 
   bool _isLoading = false;
@@ -58,7 +59,6 @@ class _ChatScreenState extends State<ChatScreen> {
       });
     } else {
       if (kIsWeb) {
-        // On web, the path is a URL. We can read the bytes directly from the XFile.
         final xfile = XFile(widget.character);
         final imageBytes = await xfile.readAsBytes();
         setState(() {
@@ -190,7 +190,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       try {
         final baseImageBytes = _originalImageBytes!;
-        
+
         final aiResponse = await CharacterService.getEmotionalResponse(
             _conversationService.getHistoryForPrompt(), baseImageBytes);
 
@@ -204,7 +204,7 @@ class _ChatScreenState extends State<ChatScreen> {
             } else {
               final generatedBytes = await CharacterService.generateEmotionalImage(
                   aiResponse.emotion, baseImageBytes);
-              
+
               if (generatedBytes != null) {
                 newImageData = generatedBytes;
                 _emotionImageCache[emotionKey] = generatedBytes;
@@ -235,18 +235,18 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('ViveChat'),
+        // 新しい変更: Leading BackButtonにロジックを適用
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  (Route<dynamic> route) => false,
+            );
+          },
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_a_photo),
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const HomeScreen()),
-                (Route<dynamic> route) => false,
-              );
-            },
-            tooltip: 'Select Character',
-          ),
           IconButton(
             icon: const Icon(Icons.delete_sweep),
             onPressed: _showClearHistoryConfirmationDialog,
@@ -265,27 +265,37 @@ class _ChatScreenState extends State<ChatScreen> {
             padding: const EdgeInsets.all(8.0),
             height: 200,
             child: _currentImageData != null
-                ? Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: [
-                      Center(child: Image.memory(_currentImageData!)),
-                      if (_currentEmotion != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.black87,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            _currentEmotion!,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                    ],
-                  )
-                : const Center(
-                    child: CircularProgressIndicator(),
+                ? GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FullScreenImageViewer(imageBytes: _currentImageData!),
                   ),
+                );
+              },
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  Center(child: Image.memory(_currentImageData!)),
+                  if (_currentEmotion != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _currentEmotion!,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                ],
+              ),
+            )
+                : const Center(
+              child: CircularProgressIndicator(),
+            ),
           ),
           Expanded(
             child: ListView.builder(
@@ -357,4 +367,3 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
-
