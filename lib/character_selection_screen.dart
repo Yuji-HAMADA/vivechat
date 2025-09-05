@@ -1,12 +1,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
 class CharacterSelectionScreen extends StatefulWidget {
   final Function(String) onCharacterSelected;
 
-  CharacterSelectionScreen({required this.onCharacterSelected});
+  const CharacterSelectionScreen({super.key, required this.onCharacterSelected});
 
   @override
   _CharacterSelectionScreenState createState() => _CharacterSelectionScreenState();
