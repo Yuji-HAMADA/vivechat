@@ -5,14 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vivechat/full_screen_image_viewer.dart';
 import 'package:vivechat/home_screen.dart';
-import 'secrets.dart';
 import 'conversation_service.dart';
 import 'chat_message.dart';
 import 'character_service.dart';
 import 'gallery_screen.dart';
 import 'image_update_service.dart';
-
-const String apiKey = geminiApiKey;
 
 class ChatScreen extends StatefulWidget {
   final String character;
@@ -129,10 +126,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendCommand() async {
-    if (apiKey == 'YOUR_GEMINI_API_KEY') {
-      setState(() { _error = 'Please add your Gemini API key.'; });
-      return;
-    }
     if (_originalImageBytes == null) {
       setState(() { _error = 'Please select a character image first.'; });
       return;
@@ -176,7 +169,13 @@ class _ChatScreenState extends State<ChatScreen> {
           });
         }
       } catch (e) {
-        setState(() { _error = 'An error occurred: $e'; });
+        setState(() {
+          if (e.toString().contains('401')) {
+            _error = 'Authentication Failed. Please check your pass key.';
+          } else {
+            _error = 'An error occurred: $e';
+          }
+        });
       } finally {
         setState(() { _isLoading = false; });
       }
@@ -223,7 +222,13 @@ class _ChatScreenState extends State<ChatScreen> {
           setState(() { _error = "The character didn't respond."; });
         }
       } catch (e) {
-        setState(() { _error = 'An error occurred: $e'; });
+        setState(() {
+          if (e.toString().contains('401')) {
+            _error = 'Authentication Failed. Please check your pass key.';
+          } else {
+            _error = 'An error occurred: $e';
+          }
+        });
       } finally {
         setState(() { _isLoading = false; });
       }

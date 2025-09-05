@@ -45,6 +45,8 @@ app.*.map.json
 /android/app/release
 
 service-account-key.json
-lib/secrets.dart
 node_modules/
 /android/build/
+
+# Environment variables
+.env*

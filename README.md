@@ -14,20 +14,23 @@ Vivechat is a Flutter application that brings a static image to life using the p
 -   **Emotion Gallery**: View all the emotional variations of your character that have been generated during your conversation in a tiled gallery.
 -   **Download Images**: Download your favorite emotional images from the gallery to your device.
 -   **Persistent Chat History**: Your conversation and generated images are saved locally, so you can pick up where you left off.
+-   **Access Control**: The app is protected by a pass key to prevent unauthorized use.
 
 ## How It Works
 
-When a user sends a message, the app sends the conversation history and the base character image to a Firebase Cloud Function, which acts as a proxy to the Gemini API. This approach helps to keep the API key secure. The cloud function then makes two calls to the Gemini API:
+The application is a Flutter app that communicates with a Firebase Functions backend.
 
-1.  **Emotion & Text Analysis**: The first call prompts the model to return two things: the character's current emotion as a single word, and a natural, in-character chat response.
-2.  **Emotional Image Generation**: The second call uses the emotion word from the first response to prompt the Gemini API to generate a new image of the character expressing that specific emotion. The new image is then displayed in the UI.
+1.  **Authentication**: On first launch, the app prompts the user for a pass key. The app sends this key to a dedicated Firebase Function (`validatePassKey`) for validation.
+2.  **API Proxy**: Once validated, the user can interact with the chat. All API calls to the Gemini API are proxied through a Firebase Function (`geminiProxy`). This keeps the Gemini API key secure and private.
+3.  **Emotion & Text Analysis**: The first call prompts the model to return two things: the character's current emotion as a single word, and a natural, in-character chat response.
+4.  **Emotional Image Generation**: The second call uses the emotion word from the first response to prompt the Gemini API to generate a new image of the character expressing that specific emotion. The new image is then displayed in the UI.
 
 ## Technology Stack
 
 -   **Framework**: Flutter
 -   **Language**: Dart
 -   **AI Model**: Google Gemini API (`gemini-2.5-flash-image-preview`)
--   **Backend**: Firebase Cloud Functions
+-   **Backend**: Firebase Cloud Functions (v2)
 -   **Hosting**: Firebase Hosting
 
 ## Setup and Installation
@@ -49,26 +52,31 @@ When a user sends a message, the app sends the conversation history and the base
     -   Log in to Firebase using `firebase login`.
     -   Configure your project with `firebase use --add` and select your Firebase project.
 
-4.  **Get Flutter dependencies:**
+4.  **Set Environment Variables:**
+    -   This project uses Firebase Functions environment variables to store the Gemini API key and the app's pass key.
+    -   Set the variables using the following commands. Replace `your_gemini_api_key` with your actual Gemini API key, and choose a secure pass key.
+        ```powershell
+        # Set your Gemini API Key
+        firebase functions:config:set gemini.key="your_gemini_api_key"
+
+        # Set the pass key for the app
+        firebase functions:config:set vivechat.pass_key="your_secret_pass_key"
+        ```
+
+5.  **Deploy Firebase Cloud Functions:**
+    -   Navigate to the functions directory and install dependencies:
+        ```bash
+        cd functions
+        npm install
+        ```
+    -   Deploy the functions:
+        ```bash
+        firebase deploy --only functions
+        ```
+
+6.  **Get Flutter dependencies:**
     ```bash
     flutter pub get
-    ```
-
-5.  **Add your API Key:**
-    -   Create a new file named `lib/secrets.dart`.
-    -   Add the following code to the file:
-        ```dart
-        // lib/secrets.dart
-        const String geminiApiKey = 'YOUR_GEMINI_API_KEY';
-        ```
-    -   Paste your actual Gemini API key in place of `YOUR_GEMINI_API_KEY`.
-    -   **Note**: The `secrets.dart` file is included in `.gitignore` to keep your key private.
-
-6.  **Deploy Firebase Cloud Functions:**
-    ```bash
-    cd functions
-    npm install
-    firebase deploy --only functions
     ```
 
 7.  **Run the application:**

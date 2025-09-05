@@ -1,5 +1,6 @@
 class ApiConstants {
   static const String baseUrl = 'https://us-central1-vivechat-40b60.cloudfunctions.net/geminiProxy';
+  static const String validatePassKeyUrl = 'https://us-central1-vivechat-40b60.cloudfunctions.net/validatePassKey';
 
   static String getEndpoint(String method) {
     // The method is now part of the proxy URL, so we just return the base URL.
