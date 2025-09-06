@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
-import 'package:vivechat/auth_service.dart';
 import 'api_constants.dart';
 
 class ImageUpdateResponse {

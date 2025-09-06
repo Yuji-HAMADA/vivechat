@@ -46,16 +46,10 @@ dependencies:
   saver_gallery: ^4.0.1
   provider: ^6.1.5+1
 
+  intl: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  intl: 0.20.2
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.14.4
 
@@ -73,7 +67,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/icon.png
+    - assets/icon/icon.png
     - assets/female.png
     - assets/male.png
   #   - images/a_dot_burr.jpeg
@@ -106,7 +100,10 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: true
   ios: true
-  image_path: "assets/icon.png"
-  min_sdk_android: 21 # android min sdk min:16, default 21
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/foreground.png"
+  web:
+    generate: true

@@ -25,7 +25,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
   final ConversationService _conversationService = ConversationService();
 
-  XFile? _originalImageFile;
+  
   Uint8List? _originalImageBytes;
   Uint8List? _currentImageData;
 
@@ -62,7 +62,6 @@ class _ChatScreenState extends State<ChatScreen> {
         final xfile = XFile(widget.character);
         final imageBytes = await xfile.readAsBytes();
         setState(() {
-          _originalImageFile = xfile;
           _originalImageBytes = imageBytes;
           _currentImageData = imageBytes;
         });
@@ -71,9 +70,8 @@ class _ChatScreenState extends State<ChatScreen> {
         if (await imageFile.exists()) {
           final imageBytes = await imageFile.readAsBytes();
           setState(() {
-            _originalImageFile = XFile(widget.character);
-            _originalImageBytes = imageBytes;
-            _currentImageData = imageBytes;
+                      _originalImageBytes = imageBytes;
+          _currentImageData = imageBytes;
           });
         }
       }

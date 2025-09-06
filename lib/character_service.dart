@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:vivechat/auth_service.dart';
 import 'api_constants.dart'; // Import the new constants file
 
 class AIResponse {
