@@ -32,18 +32,22 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            InkWell(
-              onTap: () {
-                widget.onCharacterSelected('assets/female.png');
-              },
-              child: Image.asset('assets/female.png', width: 150, height: 150),
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  widget.onCharacterSelected('assets/female.png');
+                },
+                child: Image.asset('assets/female.png'),
+              ),
             ),
             SizedBox(height: 20),
-            InkWell(
-              onTap: () {
-                widget.onCharacterSelected('assets/male.png');
-              },
-              child: Image.asset('assets/male.png', width: 150, height: 150),
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  widget.onCharacterSelected('assets/male.png');
+                },
+                child: Image.asset('assets/male.png'),
+              ),
             ),
             SizedBox(height: 20),
             ElevatedButton(
