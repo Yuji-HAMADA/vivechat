@@ -41,6 +41,7 @@ class _GalleryViewerScreenState extends State<GalleryViewerScreen> {
         ..click();
       html.Url.revokeObjectUrl(url);
     } else {
+      final messenger = ScaffoldMessenger.of(context);
       final result = await SaverGallery.saveImage(
         imageBytes,
         fileName: 'image.png',
@@ -48,11 +49,13 @@ class _GalleryViewerScreenState extends State<GalleryViewerScreen> {
         skipIfExists: false,
       );
       if (result.isSuccess) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        if (!mounted) return;
+        messenger.showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.imageSavedToGallery)),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        if (!mounted) return;
+        messenger.showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.failedToSaveImage)),
         );
       }

@@ -30,10 +30,12 @@ class FullScreenImageViewer extends StatelessWidget {
       } else {
         final result = await SaverGallery.saveImage(bytes, fileName: 'image.png', androidRelativePath: 'Pictures/ViveChat', skipIfExists: false);
         if (result.isSuccess) {
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppLocalizations.of(context)!.imageSavedToGallery)),
           );
         } else {
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(AppLocalizations.of(context)!.failedToSaveImage)),
           );

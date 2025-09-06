@@ -7,10 +7,10 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  HomeScreenState createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   String? _selectedCharacter;
 
   void _onCharacterSelected(String character) {
@@ -26,3 +26,4 @@ class _HomeScreenState extends State<HomeScreen> {
         : ChatScreen(character: _selectedCharacter!);
   }
 }
+

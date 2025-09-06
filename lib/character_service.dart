@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'api_constants.dart'; // Import the new constants file
@@ -23,7 +23,7 @@ class CharacterService {
     final headers = {
       'Content-Type': 'application/json',
       'User-Agent': 'ViveChat/1.0'
-      };
+    };
 
     final prompt = """
 You are the character in the image. Your personality is friendly and curious.
@@ -77,13 +77,19 @@ $history
           }
         }
         // Log the raw body if parsing fails or content is missing
-        print("Character did not respond. Raw response body: ${response.body}");
+        if (kDebugMode) {
+          print("Character did not respond. Raw response body: ${response.body}");
+        }
       } else {
         // Log the raw body if the HTTP request itself fails
-        print("Character did not respond. HTTP Error ${response.statusCode}. Raw response body: ${response.body}");
+        if (kDebugMode) {
+          print("Character did not respond. HTTP Error ${response.statusCode}. Raw response body: ${response.body}");
+        }
       }
     } catch (e) {
-      print("Error getting emotional response: $e");
+      if (kDebugMode) {
+        print("Error getting emotional response: $e");
+      }
     }
     return null;
   }
@@ -94,8 +100,8 @@ $history
     final headers = {
       'Content-Type': 'application/json',
       'User-Agent': 'ViveChat/1.0'
-      };
-    
+    };
+
     final prompt = "A photo of the person in the image with a ${emotion.toLowerCase()} expression on their face.";
 
     final body = jsonEncode({
@@ -114,7 +120,7 @@ $history
       ]
     });
 
-     try {
+    try {
       final response = await http.post(url, headers: headers, body: body);
       if (response.statusCode == 200) {
         final decodedResponse = jsonDecode(response.body);
@@ -136,7 +142,7 @@ $history
         }
       }
     } catch (e) {
-      print("Error generating emotional image: $e");
+      debugPrint("Error generating emotional image: $e");
     }
     return null;
   }

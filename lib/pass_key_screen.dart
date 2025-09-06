@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:vivechat/auth_service.dart';
 import 'package:vivechat/home_screen.dart';
@@ -8,7 +7,7 @@ class PassKeyScreen extends StatefulWidget {
   const PassKeyScreen({super.key});
 
   @override
-  _PassKeyScreenState createState() => _PassKeyScreenState();
+  State<PassKeyScreen> createState() => _PassKeyScreenState();
 }
 
 class _PassKeyScreenState extends State<PassKeyScreen> {
@@ -27,17 +26,21 @@ class _PassKeyScreenState extends State<PassKeyScreen> {
 
       final isValid = await _authService.validatePassKey(_passKeyController.text);
 
-      if (isValid) {
-        await _authService.savePassKey(_passKeyController.text);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      } else {
-        setState(() {
-          _errorText = AppLocalizations.of(context)!.invalidPassKey;
-          _isLoading = false;
-        });
+      if (mounted) {
+        if (isValid) {
+          await _authService.savePassKey(_passKeyController.text);
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            );
+          }
+        } else {
+          setState(() {
+            _errorText = AppLocalizations.of(context)!.invalidPassKey;
+            _isLoading = false;
+          });
+        }
       }
     }
   }
@@ -71,9 +74,9 @@ class _PassKeyScreenState extends State<PassKeyScreen> {
               _isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
-                      onPressed: _submit,
-                      child: Text(AppLocalizations.of(context)!.continueButton),
-                    ),
+                onPressed: _submit,
+                child: Text(AppLocalizations.of(context)!.continueButton),
+              ),
             ],
           ),
         ),

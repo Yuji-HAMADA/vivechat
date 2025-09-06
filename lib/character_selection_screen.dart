@@ -9,10 +9,10 @@ class CharacterSelectionScreen extends StatefulWidget {
   const CharacterSelectionScreen({super.key, required this.onCharacterSelected});
 
   @override
-  _CharacterSelectionScreenState createState() => _CharacterSelectionScreenState();
+  CharacterSelectionScreenState createState() => CharacterSelectionScreenState();
 }
 
-class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
+class CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _selectFromDevice() async {
@@ -60,3 +60,4 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
     );
   }
 }
+

@@ -126,10 +126,11 @@ class _ChatScreenState extends State<ChatScreen> {
     return result ?? false;
   }
 
-  
+
 
   Future<void> _showClearHistoryConfirmationDialog() async {
-    return showDialog<void>(
+    // 別の非同期処理なので、元のコンテキストを直接使っても問題なし
+    await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
@@ -266,38 +267,34 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  void _onBackAction() async {
+    final bool shouldPop = await _showExitConfirmationDialog();
+    if (!mounted) return;
+    if (shouldPop) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+            (Route<dynamic> route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (bool didPop) async {
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
         if (didPop) {
           return;
         }
-        final bool shouldPop = await _showExitConfirmationDialog();
-        if (shouldPop) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-                (Route<dynamic> route) => false,
-          );
-        }
+        _onBackAction();
       },
       child: Scaffold(
         appBar: AppBar(
           title: Text(AppLocalizations.of(context)!.viveChat),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () async {
-              final bool shouldPop = await _showExitConfirmationDialog();
-              if (shouldPop) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
-                      (Route<dynamic> route) => false,
-                );
-              }
-            },
+            onPressed: _onBackAction,
           ),
           actions: [
             IconButton(
