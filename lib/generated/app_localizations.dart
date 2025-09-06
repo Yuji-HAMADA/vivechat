@@ -259,6 +259,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Image not available'**
   String get imageNotAvailable;
+
+  /// No description provided for @exitConfirmationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit Confirmation'**
+  String get exitConfirmationTitle;
+
+  /// No description provided for @exitConfirmationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to exit? All chat history will be lost.'**
+  String get exitConfirmationBody;
+
+  /// No description provided for @exitButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get exitButton;
+
+  /// No description provided for @replaceButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get replaceButton;
 }
 
 class _AppLocalizationsDelegate

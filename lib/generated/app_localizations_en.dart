@@ -92,4 +92,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get imageNotAvailable => 'Image not available';
+
+  @override
+  String get exitConfirmationTitle => 'Exit Confirmation';
+
+  @override
+  String get exitConfirmationBody =>
+      'Are you sure you want to exit? All chat history will be lost.';
+
+  @override
+  String get exitButton => 'Exit';
+
+  @override
+  String get replaceButton => 'Replace';
 }

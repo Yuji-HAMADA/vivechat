@@ -25,5 +25,9 @@
   "original": "ORIGINAL",
   "imageSavedToGallery": "Image saved to gallery",
   "failedToSaveImage": "Failed to save image",
-  "imageNotAvailable": "Image not available"
+  "imageNotAvailable": "Image not available",
+  "exitConfirmationTitle": "Exit Confirmation",
+  "exitConfirmationBody": "Are you sure you want to exit? All chat history will be lost.",
+  "exitButton": "Exit",
+  "replaceButton": "Replace"
 }

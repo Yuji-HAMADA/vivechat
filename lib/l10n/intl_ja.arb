@@ -25,5 +25,9 @@
   "original": "オリジナル",
   "imageSavedToGallery": "画像がギャラリーに保存されました",
   "failedToSaveImage": "画像の保存に失敗しました",
-  "imageNotAvailable": "画像を利用できません"
+  "imageNotAvailable": "画像を利用できません",
+  "exitConfirmationTitle": "終了確認",
+  "exitConfirmationBody": "本当に終了しますか？チャット履歴はすべて失われます。",
+  "exitButton": "終了",
+  "replaceButton": "置き換える"
 }

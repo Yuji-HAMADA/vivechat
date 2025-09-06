@@ -90,4 +90,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get imageNotAvailable => '画像を利用できません';
+
+  @override
+  String get exitConfirmationTitle => '終了確認';
+
+  @override
+  String get exitConfirmationBody => '本当に終了しますか？チャット履歴はすべて失われます。';
+
+  @override
+  String get exitButton => '終了';
+
+  @override
+  String get replaceButton => '置き換える';
 }

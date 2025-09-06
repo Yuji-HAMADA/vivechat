@@ -25,7 +25,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _textController = TextEditingController();
   final ConversationService _conversationService = ConversationService();
 
-  
+
   Uint8List? _originalImageBytes;
   Uint8List? _currentImageData;
 
@@ -35,6 +35,7 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _error;
   String? _currentEmotion;
   bool _isImageUpdateMode = false;
+  bool _isImageUpdated = false;
 
   @override
   void initState() {
@@ -70,8 +71,8 @@ class _ChatScreenState extends State<ChatScreen> {
         if (await imageFile.exists()) {
           final imageBytes = await imageFile.readAsBytes();
           setState(() {
-                      _originalImageBytes = imageBytes;
-          _currentImageData = imageBytes;
+            _originalImageBytes = imageBytes;
+            _currentImageData = imageBytes;
           });
         }
       }
@@ -89,6 +90,43 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
+
+
+  Future<bool> _showExitConfirmationDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(AppLocalizations.of(context)!.exitConfirmationTitle),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(AppLocalizations.of(context)!.exitConfirmationBody),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(AppLocalizations.of(context)!.cancel),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+            TextButton(
+              child: Text(AppLocalizations.of(context)!.exitButton),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    );
+    return result ?? false;
+  }
+
+  
 
   Future<void> _showClearHistoryConfirmationDialog() async {
     return showDialog<void>(
@@ -159,7 +197,7 @@ class _ChatScreenState extends State<ChatScreen> {
           setState(() {
             if (imageUpdateResponse.imageBytes != null) {
               _currentImageData = imageUpdateResponse.imageBytes;
-              _originalImageBytes = imageUpdateResponse.imageBytes;
+              _isImageUpdated = true;
             }
             _conversationService.addMessage(ChatMessage(text: imageUpdateResponse.chatText, isUser: false));
             _isImageUpdateMode = false;
@@ -230,150 +268,185 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.viveChat),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
-                  (Route<dynamic> route) => false,
-            );
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_sweep),
-            onPressed: _showClearHistoryConfirmationDialog,
-            tooltip: AppLocalizations.of(context)!.clearChatHistoryTooltip,
-          ),
-          IconButton(
-            icon: const Icon(Icons.collections),
-            onPressed: _openGallery,
-            tooltip: AppLocalizations.of(context)!.emotionGalleryTooltip,
-          ),
-          PopupMenuButton<Locale>(
-            onSelected: (Locale locale) {
-              context.read<LocaleProvider>().setLocale(locale);
-            },
-            itemBuilder: (BuildContext context) {
-              return AppLocalizations.supportedLocales.map((Locale locale) {
-                final String lang = locale.languageCode == 'ja' ? '日本語' : 'English';
-                return PopupMenuItem<Locale>(
-                  value: locale,
-                  child: Text(lang),
-                );
-              }).toList();
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8.0),
-            height: 200,
-            child: _currentImageData != null
-                ? GestureDetector(
-              onTap: () {
-                Navigator.push(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) async {
+        if (didPop) {
+          return;
+        }
+        final bool shouldPop = await _showExitConfirmationDialog();
+        if (shouldPop) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+                (Route<dynamic> route) => false,
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context)!.viveChat),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async {
+              final bool shouldPop = await _showExitConfirmationDialog();
+              if (shouldPop) {
+                Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => FullScreenImageViewer(imageBytes: _currentImageData!),
-                  ),
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                      (Route<dynamic> route) => false,
                 );
+              }
+            },
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.delete_sweep),
+              onPressed: _showClearHistoryConfirmationDialog,
+              tooltip: AppLocalizations.of(context)!.clearChatHistoryTooltip,
+            ),
+            IconButton(
+              icon: const Icon(Icons.collections),
+              onPressed: _openGallery,
+              tooltip: AppLocalizations.of(context)!.emotionGalleryTooltip,
+            ),
+            PopupMenuButton<Locale>(
+              onSelected: (Locale locale) {
+                context.read<LocaleProvider>().setLocale(locale);
               },
-              child: Stack(
-                alignment: Alignment.bottomCenter,
+              itemBuilder: (BuildContext context) {
+                return AppLocalizations.supportedLocales.map((Locale locale) {
+                  final String lang = locale.languageCode == 'ja' ? '日本語' : 'English';
+                  return PopupMenuItem<Locale>(
+                    value: locale,
+                    child: Text(lang),
+                  );
+                }).toList();
+              },
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8.0),
+              height: 200,
+              child: _currentImageData != null
+                  ? GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FullScreenImageViewer(imageBytes: _currentImageData!),
+                    ),
+                  );
+                },
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    Center(child: Image.memory(_currentImageData!)),
+                    if (_currentEmotion != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black87,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _currentEmotion!,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                  ],
+                ),
+              )
+                  : const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                reverse: true,
+                itemCount: _conversationService.messages.length,
+                itemBuilder: (context, index) {
+                  final message = _conversationService.messages[index];
+                  return ListTile(
+                    title: Align(
+                      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: message.isUser ? Colors.blue[100] : Colors.grey[300],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(message.text),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            if (_isLoading) const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: CircularProgressIndicator(),
+            ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
                 children: [
-                  Center(child: Image.memory(_currentImageData!)),
-                  if (_currentEmotion != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black87,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        _currentEmotion!,
-                        style: const TextStyle(color: Colors.white),
-                      ),
+                  Expanded(
+                    child: CheckboxListTile(
+                      title: Text(AppLocalizations.of(context)!.justUpdateImage),
+                      value: _isImageUpdateMode,
+                      onChanged: (newValue) {
+                        setState(() {
+                          _isImageUpdateMode = newValue!;
+                        });
+                      },
+                      controlAffinity: ListTileControlAffinity.leading,
+                    ),
+                  ),
+                  if (_isImageUpdated)
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _originalImageBytes = _currentImageData;
+                          _isImageUpdated = false;
+                        });
+                      },
+                      child: Text(AppLocalizations.of(context)!.replaceButton),
                     ),
                 ],
               ),
-            )
-                : const Center(
-              child: CircularProgressIndicator(),
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              reverse: true,
-              itemCount: _conversationService.messages.length,
-              itemBuilder: (context, index) {
-                final message = _conversationService.messages[index];
-                return ListTile(
-                  title: Align(
-                    alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: message.isUser ? Colors.blue[100] : Colors.grey[300],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(message.text),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          if (_isLoading) const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: CircularProgressIndicator(),
-          ),
-          if (_error != null)
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text(_error!, style: const TextStyle(color: Colors.red)),
-            ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: CheckboxListTile(
-              title: Text(AppLocalizations.of(context)!.justUpdateImage),
-              value: _isImageUpdateMode,
-              onChanged: (newValue) {
-                setState(() {
-                  _isImageUpdateMode = newValue!;
-                });
-              },
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _textController,
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.chatWithCharacter,
-                      border: OutlineInputBorder(),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _textController,
+                      decoration: InputDecoration(
+                        hintText: AppLocalizations.of(context)!.chatWithCharacter,
+                        border: OutlineInputBorder(),
+                      ),
+                      onSubmitted: (_) => _sendCommand(),
                     ),
-                    onSubmitted: (_) => _sendCommand(),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _isLoading ? null : _sendCommand,
-                ),
-              ],
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: _isLoading ? null : _sendCommand,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
