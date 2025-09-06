@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:vivechat/generated/app_localizations.dart';
 
 class CharacterSelectionScreen extends StatefulWidget {
   final Function(String) onCharacterSelected;
@@ -25,7 +26,7 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select a Character'),
+        title: Text(AppLocalizations.of(context)!.selectCharacter),
       ),
       body: Center(
         child: Column(
@@ -47,7 +48,7 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _selectFromDevice,
-              child: Text('Select from Device'),
+              child: Text(AppLocalizations.of(context)!.selectFromDevice),
             ),
           ],
         ),

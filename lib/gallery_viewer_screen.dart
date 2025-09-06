@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:universal_html/html.dart' as html;
+import 'package:vivechat/generated/app_localizations.dart';
 
 class GalleryViewerScreen extends StatefulWidget {
   final List<MapEntry<String, Uint8List>> imageList;
@@ -48,11 +49,11 @@ class _GalleryViewerScreenState extends State<GalleryViewerScreen> {
       );
       if (result.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image saved to gallery')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.imageSavedToGallery)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to save image')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSaveImage)),
         );
       }
     }

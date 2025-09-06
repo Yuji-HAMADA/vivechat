@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:saver_gallery/saver_gallery.dart';
 import 'package:universal_html/html.dart' as html;
+import 'package:vivechat/generated/app_localizations.dart';
 
 class FullScreenImageViewer extends StatelessWidget {
   final Uint8List? imageBytes;
@@ -30,11 +31,11 @@ class FullScreenImageViewer extends StatelessWidget {
         final result = await SaverGallery.saveImage(bytes, fileName: 'image.png', androidRelativePath: 'Pictures/ViveChat', skipIfExists: false);
         if (result.isSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Image saved to gallery')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.imageSavedToGallery)),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to save image')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.failedToSaveImage)),
           );
         }
       }
@@ -52,7 +53,7 @@ class FullScreenImageViewer extends StatelessWidget {
       // Fallback for an unlikely error case
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(child: Text('Image not available')),
+        body: Center(child: Text(AppLocalizations.of(context)!.imageNotAvailable)),
       );
     }
 

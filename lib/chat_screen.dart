@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:vivechat/full_screen_image_viewer.dart';
 import 'package:vivechat/home_screen.dart';
 import 'conversation_service.dart';
@@ -10,6 +11,8 @@ import 'chat_message.dart';
 import 'character_service.dart';
 import 'gallery_screen.dart';
 import 'image_update_service.dart';
+import 'package:vivechat/generated/app_localizations.dart';
+import 'package:vivechat/locale_provider.dart';
 
 class ChatScreen extends StatefulWidget {
   final String character;
@@ -95,23 +98,23 @@ class _ChatScreenState extends State<ChatScreen> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Clear Chat History?'),
-          content: const SingleChildScrollView(
+          title: Text(AppLocalizations.of(context)!.clearChatHistoryTitle),
+          content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('This will permanently delete the conversation.'),
+                Text(AppLocalizations.of(context)!.clearChatHistoryBody),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.cancel),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Clear'),
+              child: Text(AppLocalizations.of(context)!.clear),
               onPressed: () {
                 setState(() {
                   _conversationService.clearMessages();
@@ -127,7 +130,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _sendCommand() async {
     if (_originalImageBytes == null) {
-      setState(() { _error = 'Please select a character image first.'; });
+      setState(() { _error = AppLocalizations.of(context)!.selectCharacterFirst; });
       return;
     }
     if (_textController.text.isEmpty) {
@@ -165,12 +168,12 @@ class _ChatScreenState extends State<ChatScreen> {
           });
         } else {
           setState(() {
-            _error = "Failed to update image.";
+            _error = AppLocalizations.of(context)!.failedToUpdateImage;
           });
         }
       } catch (e) {
         setState(() {
-          _error = 'An error occurred: $e';
+          _error = AppLocalizations.of(context)!.errorOccurred(e.toString());
         });
       } finally {
         setState(() { _isLoading = false; });
@@ -215,11 +218,11 @@ class _ChatScreenState extends State<ChatScreen> {
             }
           });
         } else {
-          setState(() { _error = "The character didn't respond."; });
+          setState(() { _error = AppLocalizations.of(context)!.characterDidNotRespond; });
         }
       } catch (e) {
         setState(() {
-          _error = 'An error occurred: $e';
+          _error = AppLocalizations.of(context)!.errorOccurred(e.toString());
         });
       } finally {
         setState(() { _isLoading = false; });
@@ -231,8 +234,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ViveChat'),
-        // 新しい変更: Leading BackButtonにロジックを適用
+        title: Text(AppLocalizations.of(context)!.viveChat),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -247,12 +249,26 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.delete_sweep),
             onPressed: _showClearHistoryConfirmationDialog,
-            tooltip: 'Clear Chat History',
+            tooltip: AppLocalizations.of(context)!.clearChatHistoryTooltip,
           ),
           IconButton(
             icon: const Icon(Icons.collections),
             onPressed: _openGallery,
-            tooltip: 'Emotion Gallery',
+            tooltip: AppLocalizations.of(context)!.emotionGalleryTooltip,
+          ),
+          PopupMenuButton<Locale>(
+            onSelected: (Locale locale) {
+              context.read<LocaleProvider>().setLocale(locale);
+            },
+            itemBuilder: (BuildContext context) {
+              return AppLocalizations.supportedLocales.map((Locale locale) {
+                final String lang = locale.languageCode == 'ja' ? '日本語' : 'English';
+                return PopupMenuItem<Locale>(
+                  value: locale,
+                  child: Text(lang),
+                );
+              }).toList();
+            },
           ),
         ],
       ),
@@ -328,7 +344,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: CheckboxListTile(
-              title: const Text("Just Update Image"),
+              title: Text(AppLocalizations.of(context)!.justUpdateImage),
               value: _isImageUpdateMode,
               onChanged: (newValue) {
                 setState(() {
@@ -345,8 +361,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _textController,
-                    decoration: const InputDecoration(
-                      hintText: 'Chat with your character...',
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.chatWithCharacter,
                       border: OutlineInputBorder(),
                     ),
                     onSubmitted: (_) => _sendCommand(),

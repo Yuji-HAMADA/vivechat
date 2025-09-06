@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'gallery_viewer_screen.dart'; 
+import 'gallery_viewer_screen.dart';
+import 'package:vivechat/generated/app_localizations.dart';
 
 class GalleryScreen extends StatelessWidget {
   final Map<String, Uint8List> imageCache;
@@ -12,18 +13,18 @@ class GalleryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<MapEntry<String, Uint8List>> imageList = [];
     if (originalImageBytes != null) {
-      imageList.add(MapEntry('ORIGINAL', originalImageBytes!));
+      imageList.add(MapEntry(AppLocalizations.of(context)!.original, originalImageBytes!));
     }
     imageList.addAll(imageCache.entries);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Character Emotion Gallery'),
+        title: Text(AppLocalizations.of(context)!.characterEmotionGallery),
       ),
       body: imageList.isEmpty
-          ? const Center(
+          ? Center(
               child: Text(
-                'No emotional images have been generated yet.',
+                AppLocalizations.of(context)!.noEmotionalImages,
                 style: TextStyle(fontSize: 16),
               ),
             )

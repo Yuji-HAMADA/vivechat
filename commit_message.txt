@@ -1,0 +1,3 @@
+fix(debug): Display detailed error on API failure
+
+This commit modifies the error handling in the chat screen to display the full technical error message when an API call fails. This is to help debug a platform-specific issue occurring in the LINE in-app browser on iOS.

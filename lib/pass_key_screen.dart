@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:vivechat/auth_service.dart';
 import 'package:vivechat/home_screen.dart';
+import 'package:vivechat/generated/app_localizations.dart';
 
 class PassKeyScreen extends StatefulWidget {
   const PassKeyScreen({super.key});
@@ -34,7 +35,7 @@ class _PassKeyScreenState extends State<PassKeyScreen> {
         );
       } else {
         setState(() {
-          _errorText = 'Invalid pass key';
+          _errorText = AppLocalizations.of(context)!.invalidPassKey;
           _isLoading = false;
         });
       }
@@ -45,7 +46,7 @@ class _PassKeyScreenState extends State<PassKeyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Enter Pass Key'),
+        title: Text(AppLocalizations.of(context)!.enterPassKey),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -56,12 +57,12 @@ class _PassKeyScreenState extends State<PassKeyScreen> {
               TextFormField(
                 controller: _passKeyController,
                 decoration: InputDecoration(
-                  labelText: 'Pass Key',
+                  labelText: AppLocalizations.of(context)!.passKey,
                   errorText: _errorText,
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a pass key';
+                    return AppLocalizations.of(context)!.pleaseEnterPassKey;
                   }
                   return null;
                 },
@@ -71,7 +72,7 @@ class _PassKeyScreenState extends State<PassKeyScreen> {
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
                       onPressed: _submit,
-                      child: const Text('Continue'),
+                      child: Text(AppLocalizations.of(context)!.continueButton),
                     ),
             ],
           ),
