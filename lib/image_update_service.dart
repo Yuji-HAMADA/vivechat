@@ -53,32 +53,33 @@ class ImageUpdateService {
       ]
     });
 
-    final response = await http.post(url, headers: headers, body: body);
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+      if (response.statusCode == 200) {
+        final decodedResponse = jsonDecode(response.body);
+        final candidates = decodedResponse['candidates'] as List?;
+        if (candidates != null && candidates.isNotEmpty) {
+          final parts = candidates[0]['content']['parts'] as List?;
+          if (parts != null && parts.isNotEmpty) {
+            String chatText = "I couldn't update the image.";
+            Uint8List? imageBytes;
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update image: ${response.statusCode} ${response.body}');
-    }
-
-    final decodedResponse = jsonDecode(response.body);
-    final candidates = decodedResponse['candidates'] as List?;
-    if (candidates != null && candidates.isNotEmpty) {
-      final parts = candidates[0]['content']['parts'] as List?;
-      if (parts != null && parts.isNotEmpty) {
-        String chatText = "I couldn't update the image.";
-        Uint8List? imageBytes;
-
-        for (var part in parts) {
-          if (part.containsKey('text')) {
-            chatText = part['text'] as String;
-          } else if (part.containsKey('inlineData')) {
-            final imageBytesB64 = part['inlineData']['data'] as String?;
-            if (imageBytesB64 != null) {
-              imageBytes = base64Decode(imageBytesB64);
+            for (var part in parts) {
+              if (part.containsKey('text')) {
+                chatText = part['text'] as String;
+              } else if (part.containsKey('inlineData')) {
+                final imageBytesB64 = part['inlineData']['data'] as String?;
+                if (imageBytesB64 != null) {
+                  imageBytes = base64Decode(imageBytesB64);
+                }
+              }
             }
+            return ImageUpdateResponse(chatText: chatText, imageBytes: imageBytes);
           }
         }
-        return ImageUpdateResponse(chatText: chatText, imageBytes: imageBytes);
       }
+    } catch (e) {
+      print("Error updating image from prompt: $e");
     }
     return null;
   }

@@ -170,11 +170,7 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       } catch (e) {
         setState(() {
-          if (e.toString().contains('401')) {
-            _error = 'Authentication Failed. Please check your pass key.';
-          } else {
-            _error = 'An error occurred: $e';
-          }
+          _error = 'An error occurred: $e';
         });
       } finally {
         setState(() { _isLoading = false; });
@@ -223,11 +219,7 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       } catch (e) {
         setState(() {
-          if (e.toString().contains('401')) {
-            _error = 'Authentication Failed. Please check your pass key.';
-          } else {
-            _error = 'An error occurred: $e';
-          }
+          _error = 'An error occurred: $e';
         });
       } finally {
         setState(() { _isLoading = false; });
